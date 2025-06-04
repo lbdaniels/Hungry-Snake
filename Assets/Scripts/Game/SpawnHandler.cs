@@ -63,8 +63,9 @@ public class SpawnHandler : MonoBehaviour
         Debug.Log($"Player spawned at: {snakeSpawnPos}");
 
         gameHandler.snakeHead = snakeHead;
+        EntityTracker.RegisterEntity("Player", snakeHead);
 
-        Vector2Int snakePos = gameHandler.ConvertVector3ToVector2Int( snakeSpawnPosV3 );
+        Vector2Int snakePos = PositionConversion.Vector3ToInt( snakeSpawnPosV3 );
         GridHandler.AddOccupiedPosition(snakePos, snakeHead, gameHandler.occupiedCells);
     }
 
@@ -76,8 +77,9 @@ public class SpawnHandler : MonoBehaviour
 
         GameObject foodItem = Instantiate(foodPrefab, foodSpawnPosV3, Quaternion.identity);
         Debug.Log($"Food spawned at: {foodSpawnPos}");
+        EntityTracker.RegisterEntity("Food", foodItem);
 
-        Vector2Int foodPos = gameHandler.ConvertVector3ToVector2Int( foodSpawnPosV3 );
+        Vector2Int foodPos = PositionConversion.Vector3ToInt( foodSpawnPosV3 );
         GridHandler.AddOccupiedPosition(foodPos, foodItem, gameHandler.occupiedCells);
     }
 
@@ -94,11 +96,12 @@ public class SpawnHandler : MonoBehaviour
         GameObject latestTailSegment = Instantiate(tailPrefab, tailSpawnPosV3, Quaternion.identity);
         latestTailSegment.name = $"TailSegment{tailSegmentIndex}";
         latestTailSegment.transform.SetParent(tailParent);
+        EntityTracker.RegisterEntity("Tail", latestTailSegment);
 
-        Vector2Int tailPos = gameHandler.ConvertVector3ToVector2Int(tailSpawnPosV3);
+        Vector2Int tailPos = PositionConversion.Vector3ToInt(tailSpawnPosV3);
         GridHandler.AddOccupiedPosition(tailPos, latestTailSegment, gameHandler.occupiedCells);
 
-        gameHandler.tailSegments.Add( latestTailSegment );
+        gameHandler.AddTailSegment(latestTailSegment);
         gameHandler.numOfTailSegments = gameHandler.tailSegments.Count;
         gameHandler.UpdateTailPositions();
 
@@ -109,7 +112,7 @@ public class SpawnHandler : MonoBehaviour
     // Determines the spawn position of the next tail segment
     public Vector2Int DetermineTailSpawnPos()
     {
-        int newTailSegmentIndex = gameHandler.numOfTailSegments;
+        int newTailSegmentIndex = gameHandler.tailSegments.Count;
 
         if (gameHandler.numOfTailSegments == 0)
         {
@@ -118,8 +121,8 @@ public class SpawnHandler : MonoBehaviour
 
         else
         {
-            Debug.Log($"Checking for Latest Tail Segment{gameHandler.tailSegments[newTailSegmentIndex - 1]}");
             recentTailSegment = gameHandler.tailSegments[newTailSegmentIndex - 1];
+            Debug.Log($"Checking for Latest Tail Segment{recentTailSegment}");
         }
 
         Vector2Int prevTailSegmentPos = new Vector2Int((int)recentTailSegment.transform.position.x, (int)recentTailSegment.transform.position.y);

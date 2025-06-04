@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Runtime.Serialization.Json;
 using System.Threading;
 using UnityEngine;
@@ -12,6 +14,13 @@ public class PlayerController : MonoBehaviour
     // Classes
     InputManager inputManager;
     GameHandler gameHandler;
+    PlayerProfile playerProfile;
+
+    // Components
+    SpriteRenderer spriteRenderer;
+    BoxCollider2D boxCollider;
+    Rigidbody2D rigidBody;
+    StatusHandler statusHandler;
 
     // Structs
     private GridHandler.GridInfo gridData;
@@ -22,6 +31,11 @@ public class PlayerController : MonoBehaviour
     // Var
     private float moveTimer;
     private float moveTimerMax;
+
+    public float resistance;
+    public float moveSpeed;
+    public float mutation;
+    public float strength;
 
     private InputAction upAction;
     private InputAction downAction;
@@ -35,10 +49,15 @@ public class PlayerController : MonoBehaviour
     private bool justWarped = false;
     private bool movedSinceWarp = true;
 
+    List<GameObject> tailSegmentList = new List<GameObject>();
+
     private void Awake()
     {
         // Creates an instance of necessary classes such as GameHandler
         ClassInstanceHandler();
+
+        // Gets components attached to the player's object
+        GetPlayerControllerComponents();
 
         // Uses the instance of the GridInfo struct in GameHandler to get grid data
         gridData = gameHandler.gridData;
@@ -76,19 +95,38 @@ public class PlayerController : MonoBehaviour
     {
         // Creates an instance of the GameHandler class
         gameHandler = GameHandler.Instance;
+
+        // Grabs the instance of PlayerProfile from GameHandler after it is initialized
+        //playerProfile = gameHandler.playerProfile;
+    }
+
+    private void GetPlayerControllerComponents()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        boxCollider = GetComponent<BoxCollider2D>();
+        rigidBody = GetComponent<Rigidbody2D>();
+        statusHandler = GetComponent<StatusHandler>();
     }
 
     private void InitializeAwakeVar()
     {
+        playerProfile = gameHandler.playerProfile;
+
+        resistance = playerProfile.stats.resistance;
+        moveSpeed = playerProfile.stats.moveSpeed;
+        mutation = playerProfile.stats.mutation;
+        strength = playerProfile.stats.strength;
+
         moveTimerMax = gameHandler.playerMoveTimerMax;
         moveTimer = moveTimerMax;
+
         moveDirection = new Vector2Int(1, 0);
         prevDirection = new Vector2Int(1, 0);
     }
 
     private void InitializeStartVar()
     {
-        playerGridPosition = gameHandler.ConvertVector3ToVector2Int(transform.position);
+        playerGridPosition = PositionConversion.Vector3ToInt(transform.position);
     }
 
     private void UpdateVar()
@@ -180,12 +218,12 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        Vector2Int playerPos = gameHandler.ConvertVector3ToVector2Int(transform.position);
+        Vector2Int playerPos = PositionConversion.Vector3ToInt(transform.position);
         GridHandler.RemoveOccupiedPosition(playerPos, gameHandler.occupiedCells);
 
         transform.position = new Vector3(playerGridPosition.x, playerGridPosition.y);
 
-        playerPos = gameHandler.ConvertVector3ToVector2Int(transform.position);
+        playerPos = PositionConversion.Vector3ToInt(transform.position);
         GridHandler.AddOccupiedPosition(playerPos, gameObject, gameHandler.occupiedCells);
 
         if (gameHandler.tailSegments.Count > 0)
@@ -249,9 +287,10 @@ public class PlayerController : MonoBehaviour
     private void FoodCollision(GameObject foodItem)
     {
         Debug.Log($"Food Destroyed at {foodItem.transform.position}");
-        Vector2Int foodPos = gameHandler.ConvertVector3ToVector2Int(foodItem.transform.position);
+        Vector2Int foodPos = PositionConversion.Vector3ToInt(foodItem.transform.position);
         GridHandler.RemoveOccupiedPosition(foodPos, gameHandler.occupiedCells);
 
+        EntityTracker.UnregisterEntity(EntityTracker.GetEntityID(foodItem));
         Destroy(foodItem);
 
         string spawnFood = "Food";
@@ -267,25 +306,40 @@ public class PlayerController : MonoBehaviour
     {
         Debug.Log($"Snake ate its tail. Collision function called...");
 
-        List<GameObject> tailSegmentList = gameHandler.tailSegments;
-
-        int deadTailSegmentIndex = tailSegmentList.IndexOf(tailSegment);
+        int deadTailSegmentIndex = gameHandler.tailSegments.IndexOf(tailSegment);
         if (deadTailSegmentIndex == -1) return;
 
-        List<GameObject> segmentsToDestroy = tailSegmentList.GetRange(deadTailSegmentIndex, tailSegmentList.Count - deadTailSegmentIndex);
+        List<GameObject> segmentsToDestroy = gameHandler.tailSegments.GetRange(deadTailSegmentIndex, gameHandler.tailSegments.Count - deadTailSegmentIndex);
 
         foreach (GameObject segment in segmentsToDestroy)
         {
             Debug.Log(segment.name + "destroyed at" + segment.transform.position);
 
-            Vector2Int segmentPos = gameHandler.ConvertVector3ToVector2Int(segment.transform.position);
+            Vector2Int segmentPos = PositionConversion.Vector3ToInt(segment.transform.position);
             GridHandler.RemoveOccupiedPosition(segmentPos, gameHandler.occupiedCells);
 
+            EntityTracker.UnregisterEntity(EntityTracker.GetEntityID(segment));
+            gameHandler.RemoveTailSegment(segment);
             Destroy(segment);
+            gameHandler.numOfTailSegments = gameHandler.tailSegments.Count;
         }
 
-        tailSegmentList.RemoveRange(deadTailSegmentIndex, tailSegmentList.Count - deadTailSegmentIndex);
-        gameHandler.numOfTailSegments = tailSegmentList.Count;
+        if (!statusHandler.effects.Any(effect => effect is BleedingEffect && effect.Active))
+        {
+            Bleed();
+        }
+        
     }
 
+    public void Burn()
+    {
+        BurningEffect burn = new BurningEffect(10f, 5f, playerProfile.stats.resistance);
+        statusHandler.ActivateEffect(burn);
+    }
+
+    public void Bleed()
+    {
+        BleedingEffect bleed = new BleedingEffect(resistance);
+        statusHandler.ActivateEffect(bleed);
+    }
 }

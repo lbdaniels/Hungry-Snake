@@ -10,10 +10,12 @@ public class GameHandler : MonoBehaviour
     // GameHandler Instance
     public static GameHandler Instance { get; private set; }
 
-    // Classes
+    // Classes & Structs
     GameTime gameTime;
     SpawnHandler spawnHandler;
     GameAssets gameAssets;
+    public PlayerProfile playerProfile;
+    public PlayerDefaults playerDefaults;
 
     // Grid Var
     public GameObject gridAnchorSet;
@@ -31,7 +33,6 @@ public class GameHandler : MonoBehaviour
     [HideInInspector] public List<Vector2Int> playerPositions = new List<Vector2Int>();
 
     // Snake Tail Var
-    [HideInInspector] public float snakeSegmentDeathTimer;
     [HideInInspector] public int numOfTailSegments;
 
     [HideInInspector] public List<GameObject> tailSegments = new List<GameObject>();
@@ -71,6 +72,8 @@ public class GameHandler : MonoBehaviour
         // Confirm Game Start
         Debug.Log("Game start");
 
+        InitializePlayerProfile();
+
         // Initialize grid using GridHandler Script and get grid information
         Instantiate(gridAnchorSet);
         Instantiate(borderSet);
@@ -98,14 +101,23 @@ public class GameHandler : MonoBehaviour
         gameAssets = GetComponent<GameAssets>();
     }
 
+    private void InitializePlayerProfile()
+    {
+        playerProfile = PlayerProfile.Instance;
+
+        PlayerProfile.Initialize(playerDefaults);
+        playerProfile = PlayerProfile.Instance;
+
+        Debug.Log(PlayerProfile.Instance != null ? "PlayerProfile initialized!" : "PlayerProfile is NULL!");
+
+        playerMoveTimerMax = playerProfile.stats.moveSpeed;
+    }
+
     // Assigns values to necessary variables
     private void AssignValues()
     {
         gameTimerActive = gameTime.gameTimerActive;
-        currentGameTime = gameTime.currentGameTime;
-
-        playerMoveTimerMax = gameTime.snakeMoveTimerMax;
-        snakeSegmentDeathTimer = gameTime.snakeSegmentDeathTimer;
+        //currentGameTime = gameTime.currentGameTime;
 
         playerPos = new Vector2Int(25, 25);
 
@@ -123,19 +135,10 @@ public class GameHandler : MonoBehaviour
         spriteRenderer.color = newColor;
     }
 
-    // Converts a Vector3 into a Vector2Int
-    public Vector2Int ConvertVector3ToVector2Int(Vector3 vector)
-    {
-        return new Vector2Int(Mathf.RoundToInt(vector.x), Mathf.RoundToInt(vector.y));
-    }
-
     public void UpdateTimeInfo()
     {
         gameTimerActive = gameTime.gameTimerActive;
         currentGameTime = gameTime.currentGameTime;
-
-        playerMoveTimerMax = gameTime.snakeMoveTimerMax;
-        snakeSegmentDeathTimer = gameTime.snakeSegmentDeathTimer;
     }
 
     // Updates player info for the gamehandler
@@ -151,6 +154,25 @@ public class GameHandler : MonoBehaviour
         {
             playerPositions.RemoveAt(playerPositions.Count - 1);
         }
+    }
+
+    public void UpdateTailSegmentInfo()
+    {
+        
+    }
+
+    public void AddTailSegment(GameObject segment)
+    {
+        tailSegments.Add(segment);
+        numOfTailSegments = tailSegments.Count;
+        Debug.Log("Added segment. Total now: " + tailSegments.Count);
+    }
+
+    public void RemoveTailSegment(GameObject segment)
+    {
+        tailSegments.Remove(segment);
+        numOfTailSegments = tailSegments.Count;
+        Debug.Log("Removed segment. Total now: " + tailSegments.Count);
     }
 
     // Function that calls various spawn functions based on passed targets and spawn reason
@@ -196,19 +218,20 @@ public class GameHandler : MonoBehaviour
 
             if (i < playerPositions.Count)
             {
-                Vector2Int tailSegmentPos = ConvertVector3ToVector2Int(tailSegments[i].transform.position);
+                Vector2Int tailSegmentPos = PositionConversion.Vector3ToInt(tailSegments[i].transform.position);
                 RemoveOccupiedPosition(tailSegmentPos, occupiedCells);
 
                 tailSegments[i].transform.position = new Vector3(playerPositions[i + 1].x,
                                                          playerPositions[i + 1].y,
                                                          tailSegments[i].transform.position.z);
 
-                tailSegmentPos = ConvertVector3ToVector2Int(tailSegments[i].transform.position);
+                tailSegmentPos = PositionConversion.Vector3ToInt(tailSegments[i].transform.position);
                 AddOccupiedPosition(tailSegmentPos, tailSegments[i], occupiedCells);
             }
 
             //Debug.Log($"Processing TailSegment[{i}], Position After: {tailSegments[i].transform.position}");
         }
-
     }
+
+
 }

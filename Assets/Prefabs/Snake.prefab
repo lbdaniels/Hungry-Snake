@@ -10,9 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2093059327644793858}
   - component: {fileID: 6281878668530559787}
-  - component: {fileID: 2176252459394711276}
   - component: {fileID: 8601606893642024909}
   - component: {fileID: -4876383903896568184}
+  - component: {fileID: 2176252459394711276}
+  - component: {fileID: 6287913996959782966}
   m_Layer: 0
   m_Name: Snake
   m_TagString: Player
@@ -30,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -90,19 +91,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 1
   m_SpriteSortPoint: 0
---- !u!114 &2176252459394711276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6611095967853935902}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 074484b8db4da4645b768b454bb932b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveTimerMax: 0.2
 --- !u!61 &8601606893642024909
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -176,3 +164,28 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &2176252459394711276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6611095967853935902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 074484b8db4da4645b768b454bb932b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6287913996959782966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6611095967853935902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6719e432e807e9c45b2d444fddc2cc78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  effects: []
