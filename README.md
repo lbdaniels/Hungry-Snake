@@ -2,7 +2,7 @@
 
 ## Summary
 
-Hungry Snake (working title) is a game inspired by the classic *Snake*. The player controls a snake that is always moving. The player will be tasked with changing the direction of the snake into food and away from enemies or obstacles. The loop is that you will grow larger, making it harder to protect your tail from danger, including your own hungry mouth. If you run into your tail, you consume the tail segment and those after it. This also starts a 'bleed out' timer that will slowly destroy tail segments, and you if there are none left. The goal is to survive until time runs out or you meet the conditions for an alternative win. The game is very much a work-in-progress. It's still early in development and I work on it everyday.
+Hungry Snake (working title) is a game inspired by the classic, *Snake*. The player controls a snake that is always moving. The player will be tasked with changing the direction of the snake into food and away from enemies or obstacles. The loop is that you will grow larger, making it harder to protect your tail from danger, including your own hungry mouth. If you run into your tail, you consume the tail segment and those after it. This also starts a 'bleed out' timer that will slowly destroy tail segments, and you if there are none left. The goal is to survive until time runs out or you meet the conditions for an alternative win. The game is very much a work-in-progress. It's still early in development and I work on it everyday.
 
 ## Why
 
@@ -28,7 +28,7 @@ Strength will be the stat that affects how the player will interact with enemies
 
 #### Resistance
 
-Resistance will govern how much damage you take. This includes everything from hunter attacks to the bleed out mechanic that shrinks your tail.
+Resistance will affect how much damage you take. This includes everything from hunter attacks to the bleed out mechanic that shrinks your tail.
 
 #### Mutation
 
