@@ -6,6 +6,9 @@ using UnityEngine;
 
 public class BleedingEffect : BaseEffect
 {
+    private GameObject player;
+    private TailController tailController;
+
     private float tickInterval = 5f;
     private float tickTimer;
     private List<GameObject> tailSegments = new List<GameObject>();
@@ -20,6 +23,11 @@ public class BleedingEffect : BaseEffect
     public override void Apply(GameObject target)
     {
         Debug.Log($"{target.name} started bleeding!");
+        if (target.name == "Player" )
+        {
+            player = target;
+            tailController = player.GetComponent<TailController>();
+        }
     }
 
     public override void UpdateEffect(GameObject target)
@@ -27,7 +35,7 @@ public class BleedingEffect : BaseEffect
         tickTimer -= Time.deltaTime;
         if (tickTimer <= 0)
         {
-            tailSegments = GameHandler.Instance.tailSegments;
+            tailSegments = tailController.tailSegments;
 
             if (tailSegments.Count > 0)
             {
@@ -35,7 +43,7 @@ public class BleedingEffect : BaseEffect
 
                 Debug.Log($"{tailSegments[lastTailIndex].name} being destroyed by bleed damage");
                 UnityEngine.Object.Destroy(tailSegments[lastTailIndex]);
-                GameHandler.Instance.RemoveTailSegment(tailSegments[lastTailIndex]);
+                tailController.RemoveTailSegment(tailSegments[lastTailIndex]);
             }
 
             else

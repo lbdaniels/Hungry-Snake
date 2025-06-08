@@ -14,13 +14,15 @@ public class PlayerController : MonoBehaviour
     // Classes
     InputManager inputManager;
     GameHandler gameHandler;
-    PlayerProfile playerProfile;
+    public PlayerProfile playerProfile;
+    public PlayerDefaults playerDefaults;
 
     // Components
     SpriteRenderer spriteRenderer;
     BoxCollider2D boxCollider;
     Rigidbody2D rigidBody;
     StatusHandler statusHandler;
+    TailController tailController;
 
     // Structs
     private GridHandler.GridInfo gridData;
@@ -44,7 +46,7 @@ public class PlayerController : MonoBehaviour
     private Vector2Int moveDirection;
     private Vector2Int prevDirection;
 
-    private Vector2Int playerGridPosition;
+    public Vector2Int playerGridPosition;
 
     private bool justWarped = false;
     private bool movedSinceWarp = true;
@@ -53,30 +55,19 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        // Creates an instance of necessary classes such as GameHandler
-        ClassInstanceHandler();
-
-        // Gets components attached to the player's object
-        GetPlayerControllerComponents();
-
-        // Uses the instance of the GridInfo struct in GameHandler to get grid data
-        gridData = gameHandler.gridData;
-        gridBounds = gridData.Bounds;
-        gridMetrics = gridData.Metrics;
-
-        //Debug.Log($"After PlayerController GridData instance: MinX ={ gridBounds.MinX}, MaxX ={ gridBounds.MaxX}, MinY ={ gridBounds.MinY}, MaxY ={ gridBounds.MaxY}");
-  
         // Handles Player Input
         PlayerInputHandler();
 
         // Initializes values for later such as a move timer and player direction
-        InitializeAwakeVar();
+        AwakeVar();
     }
 
     private void Start()
     {
         // Initializes values for later such as playerGridPosition
-        InitializeStartVar();
+        StartVar();
+
+        //StatChanger();
     }
 
     private void Update()
@@ -91,41 +82,37 @@ public class PlayerController : MonoBehaviour
         MovePlayer();
     }
 
-    private void ClassInstanceHandler()
+    private void AwakeVar()
     {
-        // Creates an instance of the GameHandler class
         gameHandler = GameHandler.Instance;
 
-        // Grabs the instance of PlayerProfile from GameHandler after it is initialized
-        //playerProfile = gameHandler.playerProfile;
-    }
+        InitializePlayerProfile();
 
-    private void GetPlayerControllerComponents()
-    {
         spriteRenderer = GetComponent<SpriteRenderer>();
         boxCollider = GetComponent<BoxCollider2D>();
         rigidBody = GetComponent<Rigidbody2D>();
         statusHandler = GetComponent<StatusHandler>();
+        tailController = GetComponent<TailController>();
+
+        // Uses the instance of the GridInfo struct in GameHandler to get grid data
+        gridData = gameHandler.gridData;
+        gridBounds = gridData.Bounds;
+        gridMetrics = gridData.Metrics;
     }
 
-    private void InitializeAwakeVar()
+    private void StartVar()
     {
-        playerProfile = gameHandler.playerProfile;
-
         resistance = playerProfile.stats.resistance;
         moveSpeed = playerProfile.stats.moveSpeed;
         mutation = playerProfile.stats.mutation;
         strength = playerProfile.stats.strength;
 
-        moveTimerMax = gameHandler.playerMoveTimerMax;
+        moveTimerMax = moveSpeed;
         moveTimer = moveTimerMax;
 
         moveDirection = new Vector2Int(1, 0);
         prevDirection = new Vector2Int(1, 0);
-    }
 
-    private void InitializeStartVar()
-    {
         playerGridPosition = PositionConversion.Vector3ToInt(transform.position);
     }
 
@@ -144,7 +131,17 @@ public class PlayerController : MonoBehaviour
         leftAction = inputManager.leftAction;
         rightAction = inputManager.rightAction;
     }
-    
+
+    private void InitializePlayerProfile()
+    {
+        playerProfile = PlayerProfile.Instance;
+
+        PlayerProfile.Initialize(playerDefaults);
+        playerProfile = PlayerProfile.Instance;
+
+        Debug.Log(PlayerProfile.Instance != null ? "PlayerProfile initialized!" : "PlayerProfile is NULL!");
+    }
+
     // Gets player input to decide the direction of the snake when it moves on timer reset
     private void GetMoveDirection()
     {
@@ -195,7 +192,8 @@ public class PlayerController : MonoBehaviour
 
     // Moves the snake on a timer. Can change the timer value in the Game Time component in the inspector
     private void MovePlayer()
-    { 
+    {
+        moveTimerMax = moveSpeed;
         moveTimer += Time.deltaTime;
         if (moveTimer >= moveTimerMax)
         {
@@ -210,28 +208,18 @@ public class PlayerController : MonoBehaviour
 
             justWarped = false;
             movedSinceWarp = true;
-            
-            //Debug.Log($"Player grid position: {playerGridPosition}");
-            if (gameHandler.playerPos != playerGridPosition)
-            {
-                gameHandler.UpdatePlayerInfo(playerGridPosition);
-            }
-        }
 
-        Vector2Int playerPos = PositionConversion.Vector3ToInt(transform.position);
-        GridHandler.RemoveOccupiedPosition(playerPos, gameHandler.occupiedCells);
+            tailController.CreatePosHistory();
+            tailController.UpdateTailPositions();
+
+            Vector2Int playerPosRemove = PositionConversion.Vector3ToInt(transform.position);
+            GridHandler.RemoveOccupiedPosition(playerPosRemove, gameHandler.occupiedCells);
+        }
 
         transform.position = new Vector3(playerGridPosition.x, playerGridPosition.y);
-
-        playerPos = PositionConversion.Vector3ToInt(transform.position);
-        GridHandler.AddOccupiedPosition(playerPos, gameObject, gameHandler.occupiedCells);
-
-        if (gameHandler.tailSegments.Count > 0)
-        {
-           // Debug.Log("Before movement: " + gameHandler.tailSegments[0].transform.position);
-            gameHandler.UpdateTailPositions();
-           // Debug.Log("After movement: " + gameHandler.tailSegments[0].transform.position);
-        }
+        
+        Vector2Int playerPosAdd = PositionConversion.Vector3ToInt(transform.position);
+        GridHandler.AddOccupiedPosition(playerPosAdd, gameObject, gameHandler.occupiedCells);
     }
 
     // Warps the snake if it moves out of bounds. Flips the player to the opposite x or y position in the grid
@@ -267,6 +255,18 @@ public class PlayerController : MonoBehaviour
                 justWarped = true;
             }
         }
+    }
+
+    private void StatChanger()
+    {
+        Debug.Log($"Player stats before change: Speed: {moveSpeed} Strength: {strength} Resistance: {resistance} Mutation: {mutation}");
+
+        moveSpeed += 1;
+        strength += 1;
+        resistance += 1;
+        mutation += 1;
+
+        Debug.Log($"Player stats after change: Speed: {moveSpeed} Strength: {strength} Resistance: {resistance} Mutation: {mutation}");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -306,10 +306,10 @@ public class PlayerController : MonoBehaviour
     {
         Debug.Log($"Snake ate its tail. Collision function called...");
 
-        int deadTailSegmentIndex = gameHandler.tailSegments.IndexOf(tailSegment);
+        int deadTailSegmentIndex = tailController.tailSegments.IndexOf(tailSegment);
         if (deadTailSegmentIndex == -1) return;
 
-        List<GameObject> segmentsToDestroy = gameHandler.tailSegments.GetRange(deadTailSegmentIndex, gameHandler.tailSegments.Count - deadTailSegmentIndex);
+        List<GameObject> segmentsToDestroy = tailController.tailSegments.GetRange(deadTailSegmentIndex, tailController.tailSegments.Count - deadTailSegmentIndex);
 
         foreach (GameObject segment in segmentsToDestroy)
         {
@@ -319,16 +319,14 @@ public class PlayerController : MonoBehaviour
             GridHandler.RemoveOccupiedPosition(segmentPos, gameHandler.occupiedCells);
 
             EntityTracker.UnregisterEntity(EntityTracker.GetEntityID(segment));
-            gameHandler.RemoveTailSegment(segment);
+            tailController.RemoveTailSegment(segment);
             Destroy(segment);
-            gameHandler.numOfTailSegments = gameHandler.tailSegments.Count;
         }
 
         if (!statusHandler.effects.Any(effect => effect is BleedingEffect && effect.Active))
         {
             Bleed();
         }
-        
     }
 
     public void Burn()

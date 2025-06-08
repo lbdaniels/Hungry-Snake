@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -4876383903896568184}
   - component: {fileID: 2176252459394711276}
   - component: {fileID: 6287913996959782966}
+  - component: {fileID: -2352904582189417989}
   m_Layer: 0
   m_Name: Snake
   m_TagString: Player
@@ -176,6 +177,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 074484b8db4da4645b768b454bb932b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerDefaults: {fileID: 11400000, guid: b066c0b8c94ec36408371b57a24cc256, type: 2}
+  resistance: 0
+  moveSpeed: 0
+  mutation: 0
+  strength: 0
 --- !u!114 &6287913996959782966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,4 +194,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6719e432e807e9c45b2d444fddc2cc78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effects: []
+--- !u!114 &-2352904582189417989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6611095967853935902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 410e6de8587c8614c8f2e2aa420b6d8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  snakeHead: {fileID: 0}
+  playerPos: {x: 0, y: 0}
+  playerMoveTimerMax: 0
+  playerMoveDirection: 
+  playerPositions: []
+  numOfTailSegments: 0
+  tailSegments: []
+  newTailSegmentIndex: 0

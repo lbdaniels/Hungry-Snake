@@ -9,6 +9,12 @@ TagManager:
   - GridAnchor
   - Border
   - Tail
+  - Stone
+  - Hunter
+  - Mouse
+  - Ant
+  - Path
+  - Zone
   layers:
   - Default
   - TransparentFX

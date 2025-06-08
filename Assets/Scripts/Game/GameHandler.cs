@@ -14,8 +14,6 @@ public class GameHandler : MonoBehaviour
     GameTime gameTime;
     SpawnHandler spawnHandler;
     GameAssets gameAssets;
-    public PlayerProfile playerProfile;
-    public PlayerDefaults playerDefaults;
 
     // Grid Var
     public GameObject gridAnchorSet;
@@ -26,17 +24,13 @@ public class GameHandler : MonoBehaviour
     [HideInInspector] public float currentGameTime;
 
     // Snake Head (Player) Var
-    [HideInInspector] public GameObject snakeHead;
+  
     [HideInInspector] public Vector2Int playerPos;
     [HideInInspector] public float playerMoveTimerMax;
     [HideInInspector] public string playerMoveDirection;
     [HideInInspector] public List<Vector2Int> playerPositions = new List<Vector2Int>();
 
     // Snake Tail Var
-    [HideInInspector] public int numOfTailSegments;
-
-    [HideInInspector] public List<GameObject> tailSegments = new List<GameObject>();
-    [HideInInspector] public int newTailSegmentIndex;
 
     // Occupied Positions
     [HideInInspector] public Dictionary<Vector2Int, GameObject> occupiedCells = new Dictionary<Vector2Int, GameObject>();
@@ -60,11 +54,14 @@ public class GameHandler : MonoBehaviour
             Destroy(gameObject);
         }
 
-        // Get necessary components for Game Handler
-        GetGameHandlerComponents();
-
         // Assign values to variables 
         AssignValues();
+
+        // Initialize grid using GridHandler Script and get grid information
+        InitializeGrid();
+
+        // Reserve spawn area for player
+        
     }
 
     void Start()
@@ -72,50 +69,30 @@ public class GameHandler : MonoBehaviour
         // Confirm Game Start
         Debug.Log("Game start");
 
-        InitializePlayerProfile();
+        spawnHandler.FirstSpawns();
+    }
 
-        // Initialize grid using GridHandler Script and get grid information
+    private void Update()
+    {
+        
+    }
+
+    private void InitializeGrid()
+    {
         Instantiate(gridAnchorSet);
         Instantiate(borderSet);
 
         gridData = GridHandler.CreateGrid(gridAnchorSet, borderSet);
         Debug.Log($" Stored GridBounds: MinX={gridData.Bounds.MinX}, MaxX={gridData.Bounds.MaxX}, MinY={gridData.Bounds.MinY}, MaxY={gridData.Bounds.MaxY}");
-
-        // Spawn the player
-        spawnHandler.SpawnSnake();
-
-        // Spawn first food item
-        SpawnCaller("Food", "Time For Food");
-    }
-
-    private void Update()
-    {
-        UpdateTimeInfo();
-    }
-
-    // Gets necessary components
-    private void GetGameHandlerComponents()
-    {
-        gameTime = GetComponent<GameTime>();
-        spawnHandler = GetComponent<SpawnHandler>();
-        gameAssets = GetComponent<GameAssets>();
-    }
-
-    private void InitializePlayerProfile()
-    {
-        playerProfile = PlayerProfile.Instance;
-
-        PlayerProfile.Initialize(playerDefaults);
-        playerProfile = PlayerProfile.Instance;
-
-        Debug.Log(PlayerProfile.Instance != null ? "PlayerProfile initialized!" : "PlayerProfile is NULL!");
-
-        playerMoveTimerMax = playerProfile.stats.moveSpeed;
     }
 
     // Assigns values to necessary variables
     private void AssignValues()
     {
+        gameTime = GetComponent<GameTime>();
+        spawnHandler = GetComponent<SpawnHandler>();
+        gameAssets = GetComponent<GameAssets>();
+
         gameTimerActive = gameTime.gameTimerActive;
         //currentGameTime = gameTime.currentGameTime;
 
@@ -124,8 +101,6 @@ public class GameHandler : MonoBehaviour
         playerAteFood = false;
         timeForFood = false;
         timeForExtraFood = false;
-
-        numOfTailSegments = tailSegments.Count;
     }
 
     // Changes a game objects color when provided the object and the desired color
@@ -133,46 +108,6 @@ public class GameHandler : MonoBehaviour
     {
         SpriteRenderer spriteRenderer = targetObject.GetComponent<SpriteRenderer>();
         spriteRenderer.color = newColor;
-    }
-
-    public void UpdateTimeInfo()
-    {
-        gameTimerActive = gameTime.gameTimerActive;
-        currentGameTime = gameTime.currentGameTime;
-    }
-
-    // Updates player info for the gamehandler
-    public void UpdatePlayerInfo(Vector2Int playerGridPosition)
-    {
-        playerPos = playerGridPosition;
-
-        playerPositions.Insert(0, playerPos);
-
-        int maxPosHistory = tailSegments.Count + 2;
-
-        if (playerPositions.Count > maxPosHistory)
-        {
-            playerPositions.RemoveAt(playerPositions.Count - 1);
-        }
-    }
-
-    public void UpdateTailSegmentInfo()
-    {
-        
-    }
-
-    public void AddTailSegment(GameObject segment)
-    {
-        tailSegments.Add(segment);
-        numOfTailSegments = tailSegments.Count;
-        Debug.Log("Added segment. Total now: " + tailSegments.Count);
-    }
-
-    public void RemoveTailSegment(GameObject segment)
-    {
-        tailSegments.Remove(segment);
-        numOfTailSegments = tailSegments.Count;
-        Debug.Log("Removed segment. Total now: " + tailSegments.Count);
     }
 
     // Function that calls various spawn functions based on passed targets and spawn reason
@@ -205,33 +140,13 @@ public class GameHandler : MonoBehaviour
         {
             spawnHandler.SpawnTailSegment();
         }
-    }
 
-    // Moves the tail segments. Primarily called by the MovePlayer function in the PlayerController class
-    public void UpdateTailPositions()
-    {
-        if (tailSegments.Count == 0 || playerPositions.Count <= tailSegments.Count) return;
-
-        for (int i = tailSegments.Count - 1; i >= 0; i--)
+        if (spawnTarget == "Stone")
         {
-            //Debug.Log($"Processing TailSegment[{i}], Position Before: {tailSegments[i].transform.position}");
-
-            if (i < playerPositions.Count)
+            if (spawnReason == "Time For Stone")
             {
-                Vector2Int tailSegmentPos = PositionConversion.Vector3ToInt(tailSegments[i].transform.position);
-                RemoveOccupiedPosition(tailSegmentPos, occupiedCells);
-
-                tailSegments[i].transform.position = new Vector3(playerPositions[i + 1].x,
-                                                         playerPositions[i + 1].y,
-                                                         tailSegments[i].transform.position.z);
-
-                tailSegmentPos = PositionConversion.Vector3ToInt(tailSegments[i].transform.position);
-                AddOccupiedPosition(tailSegmentPos, tailSegments[i], occupiedCells);
+                spawnHandler.SpawnStone();
             }
-
-            //Debug.Log($"Processing TailSegment[{i}], Position After: {tailSegments[i].transform.position}");
         }
     }
-
-
 }

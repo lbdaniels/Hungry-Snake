@@ -188,6 +188,7 @@ public static class GridHandler
         {
             // Debug.Log($"Object {obj.name} registered at {objPos}");
             objectPositions[objPos] = obj;
+            // Debug.Log($"Position: {objPos} added to {exemptSpawnPositions}");
             exemptSpawnPositions.Add(objPos);
         }
     }
@@ -199,6 +200,7 @@ public static class GridHandler
         {
             // Debug.Log($"Object {objectPositions[objPos].name} removed from {objPos}");
             objectPositions.Remove(objPos);
+            // Debug.Log($"Position: {objPos} removed from {exemptSpawnPositions}");
             exemptSpawnPositions.Remove(objPos);
         }
     }
