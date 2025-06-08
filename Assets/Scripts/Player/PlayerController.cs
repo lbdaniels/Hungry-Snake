@@ -197,9 +197,24 @@ public class PlayerController : MonoBehaviour
         moveTimer += Time.deltaTime;
         if (moveTimer >= moveTimerMax)
         {
-            playerGridPosition += moveDirection;
-            moveTimer = 0f;
-            prevDirection = moveDirection;
+            LayerMask obstacleMask = LayerMask.GetMask("Obstacle");
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, moveDirection, 1, obstacleMask);
+            Debug.DrawRay(transform.position, PositionConversion.Vector2IntTo3(moveDirection), Color.red, 0.1f);
+            Debug.Log($"Raycast fired in direction {moveDirection}");
+
+            if (hit.collider != null)
+            {
+                Debug.Log($"Blocked by {hit.collider.name}");
+            }
+
+            else
+            {
+                playerGridPosition += moveDirection;
+                prevDirection = moveDirection;
+                Debug.Log("No obstacle detected");
+            }
+
+                moveTimer = 0f;
 
             if (!justWarped)
             {
@@ -282,6 +297,12 @@ public class PlayerController : MonoBehaviour
             Debug.Log($"Collision detected: {other} at {playerGridPosition}");
             TailCollision(other.gameObject);
         }
+
+        if (other.CompareTag("Stone"))
+        {
+            Debug.Log($"Collision detected: {other} at {playerGridPosition}");
+            StoneCollision();
+        }
     }
 
     private void FoodCollision(GameObject foodItem)
@@ -327,6 +348,30 @@ public class PlayerController : MonoBehaviour
         {
             Bleed();
         }
+    }
+
+    private void StoneCollision()
+    {
+
+    }
+
+    private void Bounce()
+    {
+        int random = UnityEngine.Random.Range(0, 2);
+
+        if (random == 0)
+        {
+            transform.position = new Vector3(playerGridPosition.x + 1, playerGridPosition.y);
+        }
+    }
+
+    // Compares two entity positions to find the direction the player will need to travel in to reach the other entity
+    private void CompareCollisionPos(Collider2D other)
+    {
+        int diffX = Mathf.RoundToInt(other.transform.position.x) - Mathf.RoundToInt(transform.position.x);
+        int diffY = Mathf.RoundToInt(other.transform.position.y) - Mathf.RoundToInt(transform.position.y);
+
+        Vector2Int diff = new Vector2Int(diffX, diffY);
     }
 
     public void Burn()
